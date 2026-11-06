@@ -1,0 +1,24 @@
+@MiPrimeraApi_HostAddress = http://localhost:5055
+
+### 1. Obtener todos los usuarios
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Accept: application/json
+
+### 2. Buscar usuario por ID (ejemplo: ID 1)
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
+Accept: application/json
+
+### 3. Registrar un nuevo usuario
+POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Content-Type: application/json
+
+{
+  "nombreUsuario": "Carlos Perez",
+  "correoElectronicousuario": "carlos@correo.com",
+  "contrasenausuario": "carlos123",
+  "activo": true
+}
+
+### 4. Eliminar un usuario por ID (ejemplo: ID 4)
+DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/4
+Accept: application/json
