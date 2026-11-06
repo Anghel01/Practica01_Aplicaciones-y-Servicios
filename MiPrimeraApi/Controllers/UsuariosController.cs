@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MiPrimeraApi.Models;
 using MiPrimeraApi.Repositorio;
 
 namespace MiPrimeraApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsuariosController : ControllerBase
@@ -41,6 +43,7 @@ namespace MiPrimeraApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult EliminarPorId(int id)
         {
             bool eliminado = _repositorio.EliminarPorId(id);

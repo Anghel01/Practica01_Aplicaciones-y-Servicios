@@ -1,15 +1,35 @@
 @MiPrimeraApi_HostAddress = http://localhost:5055
 
-### 1. Obtener todos los usuarios
+### 1. Iniciar sesión (Login) para obtener Token JWT
+# @name login
+POST {{MiPrimeraApi_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "password": "1234"
+}
+
+### Guardar token obtenido de la respuesta anterior
+@token = {{login.response.body.token}}
+
+### 2. Probar GET sin token (Debe responder 401 Unauthorized)
 GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
 Accept: application/json
 
-### 2. Buscar usuario por ID (ejemplo: ID 1)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
+### 3. Obtener todos los usuarios (Con Token JWT)
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{token}}
 Accept: application/json
 
-### 3. Registrar un nuevo usuario
+### 4. Buscar usuario por ID (Con Token JWT)
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 5. Registrar un nuevo usuario (Con Token JWT)
 POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -19,6 +39,7 @@ Content-Type: application/json
   "activo": true
 }
 
-### 4. Eliminar un usuario por ID (ejemplo: ID 4)
+### 6. Eliminar usuario por ID (Requiere Rol Admin en el Token)
 DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/4
+Authorization: Bearer {{token}}
 Accept: application/json
