@@ -8,11 +8,9 @@ using MiPrimeraApi.Repositorio;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Configuración de Swagger con soporte para JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -30,14 +28,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Configuración de Entity Framework Core con SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Inyección de dependencias para el patrón repositorio
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
-// Configuración de Autenticación con JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -54,12 +49,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Habilita las reglas de permisos ([Authorize], roles, políticas)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())

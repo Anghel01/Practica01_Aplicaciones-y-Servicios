@@ -5,7 +5,7 @@ using MiPrimeraApi.Repositorio;
 
 namespace MiPrimeraApi.Controllers
 {
-    [Authorize]
+    [Authorize] // Cualquier usuario autenticado con token puede acceder (Admin o Usuario)
     [ApiController]
     [Route("api/[controller]")]
     public class UsuariosController : ControllerBase
@@ -17,13 +17,13 @@ namespace MiPrimeraApi.Controllers
             _repositorio = repositorio;
         }
 
-        [HttpGet]
+        [HttpGet] // Admin y Usuario pueden consultar
         public ICollection<Usuario> ObtenerUsuarios()
         {
             return _repositorio.ObtenerUsuarios();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}")] // Admin y Usuario pueden consultar
         public ActionResult<Usuario> BuscarPorId(int id)
         {
             var usuario = _repositorio.BuscarPorId(id);
@@ -36,6 +36,7 @@ namespace MiPrimeraApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")] // Solo Admin puede crear
         public ActionResult AgregarUsuario([FromBody] Usuario nuevoUsuario)
         {
             _repositorio.AgregarUsuario(nuevoUsuario);
@@ -43,7 +44,7 @@ namespace MiPrimeraApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")] // Solo Admin puede eliminar
         public ActionResult EliminarPorId(int id)
         {
             bool eliminado = _repositorio.EliminarPorId(id);

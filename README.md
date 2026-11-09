@@ -2,13 +2,11 @@
 
 ## ¿Qué es el proyecto?
 
-Este proyecto es una API REST desarrollada con ASP.NET Core sobre .NET 8. Su función principal es administrar usuarios mediante operaciones HTTP de consulta, búsqueda, registro y eliminación con persistencia en SQL Server y seguridad mediante autenticación con tokens **JWT (JSON Web Tokens)**.
+Este proyecto es una API REST desarrollada con ASP.NET Core sobre .NET 8. Su función principal es administrar usuarios mediante operaciones HTTP de consulta, búsqueda, registro y eliminación con persistencia en SQL Server, seguridad mediante tokens **JWT (JSON Web Tokens)** y control de acceso basado en **Roles (RBAC - Role-Based Access Control)**.
 
 La API expone endpoints que pueden ser consumidos por aplicaciones web, aplicaciones móviles, clientes de escritorio o herramientas de prueba como Swagger y Postman.
 
-## ¿Qué hace?
-
-La API administra usuarios con la siguiente estructura:
+## Estructura del Modelo `Usuario`
 
 - `IdUsuario`: Identificador del usuario (clave primaria autoincremental).
 - `NombreUsuario`: Nombre del usuario.
@@ -16,67 +14,44 @@ La API administra usuarios con la siguiente estructura:
 - `Contrasenausuario`: Contraseña.
 - `Activo`: Estado activo o inactivo.
 
-### Endpoints disponibles:
+## Roles del Sistema y Permisos
 
-| Método | Ruta | Autorización | Función | Códigos de respuesta |
-|---|---|---|---|---|
-| `POST` | `/api/Auth/login` | Anónima (`[AllowAnonymous]`) | Autentica al usuario y emite un token JWT. | `200 OK`, `401 Unauthorized` |
-| `GET` | `/api/Usuarios` | Requiere Token (`[Authorize]`) | Obtiene todos los usuarios registrados. | `200 OK`, `401 Unauthorized` |
-| `GET` | `/api/Usuarios/{id}` | Requiere Token (`[Authorize]`) | Busca un usuario por su identificador. | `200 OK`, `401`, `404 Not Found` |
-| `POST` | `/api/Usuarios` | Requiere Token (`[Authorize]`) | Registra un nuevo usuario en la base de datos. | `200 OK`, `401 Unauthorized` |
-| `DELETE` | `/api/Usuarios/{id}` | Requiere Rol Admin (`[Authorize(Roles = "Admin")]`) | Elimina un usuario por su identificador. | `204 NoContent`, `401`, `403`, `404` |
+El sistema implementa dos roles principales emitidos dinámicamente en el login:
 
-## Autenticación con JWT (JSON Web Tokens)
+1. **`Admin`**: Control total. Puede consultar (`GET`), registrar nuevos usuarios (`POST`) y eliminar usuarios (`DELETE`).
+2. **`Usuario`**: Perfil de solo lectura. Puede consultar (`GET`), pero cualquier intento de crear (`POST`) o eliminar (`DELETE`) responderá con `403 Forbidden`.
 
-1. El cliente envía sus credenciales al endpoint de login (`POST /api/Auth/login`).
-2. Si las credenciales son válidas, la API genera un token JWT firmado con algoritmo HMAC-SHA256 usando la clave secreta configurada en `appsettings.json`.
-3. El token incluye claims como el usuario y el rol (`Admin`).
-4. En las solicitudes posteriores, el cliente envía el encabezado `Authorization: Bearer <token>`.
-5. El middleware de autenticación valida la firma, vigencia, emisor y audiencia.
+### Matriz de Endpoints y Permisos:
+
+| Método | Ruta | Autorización | Rol Requerido | Función | Códigos de respuesta |
+|---|---|---|---|---|---|
+| `POST` | `/api/Auth/login` | Anónima (`[AllowAnonymous]`) | Ninguno | Autentica y genera el token con su Rol. | `200 OK`, `401 Unauthorized` |
+| `GET` | `/api/Usuarios` | Requiere Token (`[Authorize]`) | `Admin` o `Usuario` | Obtiene todos los usuarios registrados. | `200 OK`, `401 Unauthorized` |
+| `GET` | `/api/Usuarios/{id}` | Requiere Token (`[Authorize]`) | `Admin` o `Usuario` | Busca un usuario por su identificador. | `200 OK`, `401`, `404 Not Found` |
+| `POST` | `/api/Usuarios` | Requiere Rol (`[Authorize(Roles = "Admin")]`) | **Solo `Admin`** | Registra un nuevo usuario en la base de datos. | `200 OK`, `401`, `403 Forbidden` |
+| `DELETE` | `/api/Usuarios/{id}` | Requiere Rol (`[Authorize(Roles = "Admin")]`) | **Solo `Admin`** | Elimina un usuario por su identificador. | `204 NoContent`, `401`, `403 Forbidden`, `404` |
+
+## Usuarios de Prueba (Simulación de Roles)
+
+Para pruebas locales en `/api/Auth/login`:
+- **Administrador**:
+  - `usuario`: `admin`
+  - `password`: `1234`
+  - Rol asignado: `Admin`
+- **Cliente**:
+  - `usuario`: `cliente`
+  - `password`: `1234`
+  - Rol asignado: `Usuario`
 
 ## ¿Cómo funciona operativamente? (Principios SOLID)
 
-Cuando la aplicación inicia, ASP.NET Core configura los controladores, Swagger con soporte para JWT Bearer, Entity Framework Core y la conexión con SQL Server.
-
-El flujo operativo sigue el principio de inversión de dependencias:
-
-1. La solicitud HTTP llega a los middlewares de autenticación (`UseAuthentication`) y autorización (`UseAuthorization`).
-2. La solicitud es procesada por `UsuariosController`.
-3. El controlador recibe una abstracción (`IUsuarioRepository`) mediante inyección de dependencias (`AddScoped`), desacoplándolo de la implementación concreta.
-4. El controlador delega la operación al repositorio `UsuarioRepository`.
-5. `UsuarioRepository` utiliza `ApplicationDbContext` para comunicarse con SQL Server.
-6. Entity Framework Core traduce las operaciones a consultas SQL sobre la tabla `Usuarios`.
-7. El resultado regresa al repositorio y posteriormente al controlador.
-8. El controlador devuelve la respuesta HTTP correspondiente al cliente.
-
-## Organización de los componentes
-
-- **`Controllers/AuthController.cs`**: Controlador para la generación y emisión de tokens JWT.
-- **`Controllers/UsuariosController.cs`**: Expone los endpoints protegidos con `[Authorize]` y `[Authorize(Roles = "Admin")]`.
-- **`Repositorio/IUsuarioRepository.cs`**: Interfaz que define el contrato de operaciones de usuarios.
-- **`Repositorio/UsuarioRepository.cs`**: Implementación del repositorio usando Entity Framework Core y consultas optimizadas (`AsNoTracking`).
-- **`Data/ApplicationDbContext.cs`**: Contexto de Entity Framework Core que mapea la entidad `Usuario` con la tabla `Usuarios`.
-- **`Models/Usuario.cs`**: Clase modelo de la entidad de usuario.
-- **`Program.cs`**: Registro de servicios, configuración de JWT Bearer, Swagger interactivo y pipeline HTTP.
-- **`Scripts/InicializarBaseDeDatos.sql`**: Script SQL para crear la base de datos `AplicacionesP01Db`, la tabla `Usuarios` y registros iniciales.
-
-## Conexión y Configuración (`appsettings.json`)
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=AplicacionesP01Db;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "Jwt": {
-    "Key": "esta-es-una-clave-secreta-de-mas-de-32-caracteres-123",
-    "Issuer": "CafeteriaBackend",
-    "Audience": "CafeteriaClientes"
-  }
-}
-```
+1. La solicitud HTTP pasa por los middlewares de autenticación (`UseAuthentication`) y autorización (`UseAuthorization`).
+2. Se evalúa el token JWT: valida firma, expiración y claims de rol (`ClaimTypes.Role`).
+3. El controlador [UsuariosController.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Controllers/UsuariosController.cs) recibe una abstracción ([IUsuarioRepository.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Repositorio/IUsuarioRepository.cs)) mediante inyección de dependencias (`AddScoped`), desacoplándolo de la implementación concreta.
+4. El repositorio [UsuarioRepository.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Repositorio/UsuarioRepository.cs) ejecuta las consultas a SQL Server mediante [ApplicationDbContext.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Data/ApplicationDbContext.cs) utilizando Entity Framework Core.
 
 ## Pruebas de los Endpoints
 
 Se pueden ejecutar desde:
 1. **Swagger UI**: Disponible en `/swagger`, con soporte para el botón **Authorize** (pegando el token JWT).
-2. **Archivo HTTP**: Utilizando `MiPrimeraApi/MiPrimeraApi.http` directamente en Visual Studio.
+2. **Archivo HTTP**: Utilizando [MiPrimeraApi.http](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/MiPrimeraApi.http) directamente en Visual Studio.

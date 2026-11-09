@@ -1,7 +1,9 @@
 @MiPrimeraApi_HostAddress = http://localhost:5055
 
-### 1. Iniciar sesión (Login) para obtener Token JWT
-# @name login
+### =========================================================
+### 1. LOGIN COMO ADMIN (Rol: Admin)
+### =========================================================
+# @name loginAdmin
 POST {{MiPrimeraApi_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
@@ -10,36 +12,75 @@ Content-Type: application/json
   "password": "1234"
 }
 
-### Guardar token obtenido de la respuesta anterior
-@token = {{login.response.body.token}}
+### Guardar token de Admin
+@tokenAdmin = {{loginAdmin.response.body.token}}
 
-### 2. Probar GET sin token (Debe responder 401 Unauthorized)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
-Accept: application/json
 
-### 3. Obtener todos los usuarios (Con Token JWT)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
-Authorization: Bearer {{token}}
-Accept: application/json
-
-### 4. Buscar usuario por ID (Con Token JWT)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
-Authorization: Bearer {{token}}
-Accept: application/json
-
-### 5. Registrar un nuevo usuario (Con Token JWT)
-POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
-Authorization: Bearer {{token}}
+### =========================================================
+### 2. LOGIN COMO CLIENTE (Rol: Usuario)
+### =========================================================
+# @name loginCliente
+POST {{MiPrimeraApi_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
-  "nombreUsuario": "Carlos Perez",
-  "correoElectronicousuario": "carlos@correo.com",
-  "contrasenausuario": "carlos123",
+  "usuario": "cliente",
+  "password": "1234"
+}
+
+### Guardar token de Cliente
+@tokenCliente = {{loginCliente.response.body.token}}
+
+
+### =========================================================
+### 3. PRUEBAS CON ROL: Usuario (Cliente)
+### =========================================================
+
+### 3.1 Consultar todos los usuarios (DEBE FUNCIONAR - 200 OK)
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{tokenCliente}}
+Accept: application/json
+
+### 3.2 Intentar crear usuario con rol Usuario (DEBE DAR 403 FORBIDDEN)
+POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{tokenCliente}}
+Content-Type: application/json
+
+{
+  "nombreUsuario": "No Autorizado",
+  "correoElectronicousuario": "noautorizado@correo.com",
+  "contrasenausuario": "pass123",
   "activo": true
 }
 
-### 6. Eliminar usuario por ID (Requiere Rol Admin en el Token)
-DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/4
-Authorization: Bearer {{token}}
+### 3.3 Intentar eliminar usuario con rol Usuario (DEBE DAR 403 FORBIDDEN)
+DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
+Authorization: Bearer {{tokenCliente}}
+Accept: application/json
+
+
+### =========================================================
+### 4. PRUEBAS CON ROL: Admin
+### =========================================================
+
+### 4.1 Consultar todos los usuarios (DEBE FUNCIONAR - 200 OK)
+GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{tokenAdmin}}
+Accept: application/json
+
+### 4.2 Crear nuevo usuario como Admin (DEBE FUNCIONAR - 200 OK)
+POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombreUsuario": "Nuevo Usuario Admin",
+  "correoElectronicousuario": "admin_creado@correo.com",
+  "contrasenausuario": "admin123",
+  "activo": true
+}
+
+### 4.3 Eliminar usuario como Admin (DEBE FUNCIONAR - 204 NoContent o 404)
+DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/1002
+Authorization: Bearer {{tokenAdmin}}
 Accept: application/json

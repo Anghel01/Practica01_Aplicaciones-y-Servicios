@@ -24,14 +24,18 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login(LoginRequest request)
     {
-        // SOLO PARA PRUEBAS: usuario fijo
-        if (request.Usuario != "admin" || request.Password != "1234")
+        // SOLO PARA PRUEBAS: dos usuarios fijos, cada uno con su rol
+        string? rol = null;
+        if (request.Usuario == "admin" && request.Password == "1234") rol = "Admin";
+        else if (request.Usuario == "cliente" && request.Password == "1234") rol = "Usuario";
+
+        if (rol == null)
             return Unauthorized(new { mensaje = "Usuario o contraseña incorrectos" });
 
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, request.Usuario),
-            new Claim(ClaimTypes.Role, "Admin"),
+            new Claim(ClaimTypes.Role, rol),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
