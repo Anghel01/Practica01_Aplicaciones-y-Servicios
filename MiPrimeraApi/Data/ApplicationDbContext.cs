@@ -11,9 +11,11 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Producto> Productos => Set<Producto>(); // Agregamos la tabla Productos
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Configuración de Usuarios
         modelBuilder.Entity<Usuario>(entity =>
         {
             entity.ToTable("Usuarios");
@@ -31,6 +33,13 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
             entity.Property(usuario => usuario.Activo)
                 .IsRequired();
+        });
+
+        // <-- 2. Agregamos las reglas de Producto
+        modelBuilder.Entity<Producto>(entity =>
+        {
+            entity.Property(p => p.Nombre).HasMaxLength(100);
+            entity.Property(p => p.Precio).HasPrecision(18, 2);
         });
     }
 }

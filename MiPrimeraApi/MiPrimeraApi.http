@@ -33,54 +33,61 @@ Content-Type: application/json
 
 
 ### =========================================================
-### 3. PRUEBAS CON ROL: Usuario (Cliente)
+### 3. PRUEBAS DE PRODUCTOS CON ROL: Usuario (Cliente)
 ### =========================================================
 
-### 3.1 Consultar todos los usuarios (DEBE FUNCIONAR - 200 OK)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
+### 3.1 Consultar todos los productos (FUNCIONA - 200 OK)
+GET {{MiPrimeraApi_HostAddress}}/api/Productos
 Authorization: Bearer {{tokenCliente}}
 Accept: application/json
 
-### 3.2 Intentar crear usuario con rol Usuario (DEBE DAR 403 FORBIDDEN)
-POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+### 3.2 Intentar crear producto con rol Usuario (DEBE DAR 403 FORBIDDEN)
+POST {{MiPrimeraApi_HostAddress}}/api/Productos
 Authorization: Bearer {{tokenCliente}}
 Content-Type: application/json
 
 {
-  "nombreUsuario": "No Autorizado",
-  "correoElectronicousuario": "noautorizado@correo.com",
-  "contrasenausuario": "pass123",
+  "nombre": "Café Expresso",
+  "precio": 2.50,
   "activo": true
 }
 
-### 3.3 Intentar eliminar usuario con rol Usuario (DEBE DAR 403 FORBIDDEN)
-DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/1
-Authorization: Bearer {{tokenCliente}}
-Accept: application/json
-
 
 ### =========================================================
-### 4. PRUEBAS CON ROL: Admin
+### 4. PRUEBAS DE PRODUCTOS CON ROL: Admin
 ### =========================================================
 
-### 4.1 Consultar todos los usuarios (DEBE FUNCIONAR - 200 OK)
-GET {{MiPrimeraApi_HostAddress}}/api/Usuarios
-Authorization: Bearer {{tokenAdmin}}
-Accept: application/json
-
-### 4.2 Crear nuevo usuario como Admin (DEBE FUNCIONAR - 200 OK)
-POST {{MiPrimeraApi_HostAddress}}/api/Usuarios
+### 4.1 Crear nuevo producto como Admin (201 Created)
+# @name crearProducto
+POST {{MiPrimeraApi_HostAddress}}/api/Productos
 Authorization: Bearer {{tokenAdmin}}
 Content-Type: application/json
 
 {
-  "nombreUsuario": "Nuevo Usuario Admin",
-  "correoElectronicousuario": "admin_creado@correo.com",
-  "contrasenausuario": "admin123",
+  "nombre": "Café Americano",
+  "precio": 1.50,
   "activo": true
 }
 
-### 4.3 Eliminar usuario como Admin (DEBE FUNCIONAR - 204 NoContent o 404)
-DELETE {{MiPrimeraApi_HostAddress}}/api/Usuarios/1002
+@nuevoProductoId = {{crearProducto.response.body.id}}
+
+### 4.2 Consultar producto por ID
+GET {{MiPrimeraApi_HostAddress}}/api/Productos/{{nuevoProductoId}}
+Authorization: Bearer {{tokenAdmin}}
+Accept: application/json
+
+### 4.3 Actualizar producto como Admin (204 NoContent)
+PUT {{MiPrimeraApi_HostAddress}}/api/Productos/{{nuevoProductoId}}
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Café Americano Doble",
+  "precio": 2.00,
+  "activo": true
+}
+
+### 4.4 Eliminar producto como Admin (204 NoContent)
+DELETE {{MiPrimeraApi_HostAddress}}/api/Productos/{{nuevoProductoId}}
 Authorization: Bearer {{tokenAdmin}}
 Accept: application/json

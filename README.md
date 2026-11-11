@@ -2,56 +2,59 @@
 
 ## ¿Qué es el proyecto?
 
-Este proyecto es una API REST desarrollada con ASP.NET Core sobre .NET 8. Su función principal es administrar usuarios mediante operaciones HTTP de consulta, búsqueda, registro y eliminación con persistencia en SQL Server, seguridad mediante tokens **JWT (JSON Web Tokens)** y control de acceso basado en **Roles (RBAC - Role-Based Access Control)**.
+Este proyecto es una API REST desarrollada con ASP.NET Core sobre .NET 8. Su función principal es administrar **Usuarios** y **Productos** mediante operaciones HTTP con persistencia en SQL Server (Entity Framework Core), seguridad mediante tokens **JWT (JSON Web Tokens)** y control de acceso basado en **Roles (RBAC - Role-Based Access Control)**.
 
 La API expone endpoints que pueden ser consumidos por aplicaciones web, aplicaciones móviles, clientes de escritorio o herramientas de prueba como Swagger y Postman.
 
-## Estructura del Modelo `Usuario`
+## Modelos de Datos
 
+### 1. `Usuario`
 - `IdUsuario`: Identificador del usuario (clave primaria autoincremental).
 - `NombreUsuario`: Nombre del usuario.
 - `CorreoElectronicousuario`: Correo electrónico.
 - `Contrasenausuario`: Contraseña.
 - `Activo`: Estado activo o inactivo.
 
+### 2. `Producto`
+- `Id`: Identificador del producto (clave primaria autoincremental).
+- `Nombre`: Nombre del producto (`nvarchar(100)`).
+- `Precio`: Precio del producto (`decimal(18,2)`).
+- `Activo`: Estado activo o inactivo (`bit`).
+
 ## Roles del Sistema y Permisos
 
-El sistema implementa dos roles principales emitidos dinámicamente en el login:
-
-1. **`Admin`**: Control total. Puede consultar (`GET`), registrar nuevos usuarios (`POST`) y eliminar usuarios (`DELETE`).
-2. **`Usuario`**: Perfil de solo lectura. Puede consultar (`GET`), pero cualquier intento de crear (`POST`) o eliminar (`DELETE`) responderá con `403 Forbidden`.
+1. **`Admin`**: Control total. Puede consultar (`GET`), registrar (`POST`), actualizar (`PUT`) y eliminar (`DELETE`).
+2. **`Usuario`**: Solo lectura. Puede consultar (`GET`), pero cualquier intento de crear, editar o borrar responderá con `403 Forbidden`.
 
 ### Matriz de Endpoints y Permisos:
 
-| Método | Ruta | Autorización | Rol Requerido | Función | Códigos de respuesta |
-|---|---|---|---|---|---|
-| `POST` | `/api/Auth/login` | Anónima (`[AllowAnonymous]`) | Ninguno | Autentica y genera el token con su Rol. | `200 OK`, `401 Unauthorized` |
-| `GET` | `/api/Usuarios` | Requiere Token (`[Authorize]`) | `Admin` o `Usuario` | Obtiene todos los usuarios registrados. | `200 OK`, `401 Unauthorized` |
-| `GET` | `/api/Usuarios/{id}` | Requiere Token (`[Authorize]`) | `Admin` o `Usuario` | Busca un usuario por su identificador. | `200 OK`, `401`, `404 Not Found` |
-| `POST` | `/api/Usuarios` | Requiere Rol (`[Authorize(Roles = "Admin")]`) | **Solo `Admin`** | Registra un nuevo usuario en la base de datos. | `200 OK`, `401`, `403 Forbidden` |
-| `DELETE` | `/api/Usuarios/{id}` | Requiere Rol (`[Authorize(Roles = "Admin")]`) | **Solo `Admin`** | Elimina un usuario por su identificador. | `204 NoContent`, `401`, `403 Forbidden`, `404` |
+| Recurso | Método | Ruta | Autorización | Rol Requerido | Función | Códigos de respuesta |
+|---|---|---|---|---|---|---|
+| **Auth** | `POST` | `/api/Auth/login` | Anónima (`[AllowAnonymous]`) | Ninguno | Autentica y genera el token con su Rol. | `200 OK`, `401` |
+| **Usuarios** | `GET` | `/api/Usuarios` | Requiere Token | `Admin` o `Usuario` | Obtiene todos los usuarios. | `200 OK`, `401` |
+| **Usuarios** | `GET` | `/api/Usuarios/{id}` | Requiere Token | `Admin` o `Usuario` | Busca usuario por ID. | `200 OK`, `401`, `404` |
+| **Usuarios** | `POST` | `/api/Usuarios` | Requiere Rol | **Solo `Admin`** | Registra un nuevo usuario. | `200 OK`, `401`, `403` |
+| **Usuarios** | `DELETE` | `/api/Usuarios/{id}` | Requiere Rol | **Solo `Admin`** | Elimina un usuario por ID. | `204 NoContent`, `401`, `403`, `404` |
+| **Productos** | `GET` | `/api/Productos` | Requiere Token | `Admin` o `Usuario` | Obtiene todos los productos. | `200 OK`, `401` |
+| **Productos** | `GET` | `/api/Productos/{id}` | Requiere Token | `Admin` o `Usuario` | Busca producto por ID. | `200 OK`, `401`, `404` |
+| **Productos** | `POST` | `/api/Productos` | Requiere Rol | **Solo `Admin`** | Crea un nuevo producto. | `201 Created`, `401`, `403` |
+| **Productos** | `PUT` | `/api/Productos/{id}` | Requiere Rol | **Solo `Admin`** | Actualiza un producto existente. | `204 NoContent`, `401`, `403`, `404` |
+| **Productos** | `DELETE` | `/api/Productos/{id}` | Requiere Rol | **Solo `Admin`** | Elimina un producto por ID. | `204 NoContent`, `401`, `403`, `404` |
 
 ## Usuarios de Prueba (Simulación de Roles)
 
 Para pruebas locales en `/api/Auth/login`:
-- **Administrador**:
-  - `usuario`: `admin`
-  - `password`: `1234`
-  - Rol asignado: `Admin`
-- **Cliente**:
-  - `usuario`: `cliente`
-  - `password`: `1234`
-  - Rol asignado: `Usuario`
+- **Administrador**: `usuario: admin`, `password: 1234` &rarr; Rol: `Admin`
+- **Cliente**: `usuario: cliente`, `password: 1234` &rarr; Rol: `Usuario`
 
-## ¿Cómo funciona operativamente? (Principios SOLID)
+## Arquitectura y Migraciones (Code First)
 
-1. La solicitud HTTP pasa por los middlewares de autenticación (`UseAuthentication`) y autorización (`UseAuthorization`).
-2. Se evalúa el token JWT: valida firma, expiración y claims de rol (`ClaimTypes.Role`).
-3. El controlador [UsuariosController.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Controllers/UsuariosController.cs) recibe una abstracción ([IUsuarioRepository.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Repositorio/IUsuarioRepository.cs)) mediante inyección de dependencias (`AddScoped`), desacoplándolo de la implementación concreta.
-4. El repositorio [UsuarioRepository.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Repositorio/UsuarioRepository.cs) ejecuta las consultas a SQL Server mediante [ApplicationDbContext.cs](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/Data/ApplicationDbContext.cs) utilizando Entity Framework Core.
-
-## Pruebas de los Endpoints
-
-Se pueden ejecutar desde:
-1. **Swagger UI**: Disponible en `/swagger`, con soporte para el botón **Authorize** (pegando el token JWT).
-2. **Archivo HTTP**: Utilizando [MiPrimeraApi.http](file:///C:/Users/angel/source/repos/MiPrimeraApi/MiPrimeraApi/MiPrimeraApi.http) directamente en Visual Studio.
+1. **Entity Framework Core**:
+   - `ApplicationDbContext.cs` mapea las entidades `Usuarios` y `Productos`.
+   - Migraciones creadas con `dotnet ef migrations add` y aplicadas con `dotnet ef database update`.
+2. **Patrón Repositorio y SOLID**:
+   - Acceso a datos desacoplado en `UsuarioRepository` y `ProductoRepository`.
+   - Inyección de dependencias `AddScoped` en `Program.cs`.
+3. **Seguridad**:
+   - Middleware de autenticación JWT y autorización por roles.
+   - Swagger UI interactivo con botón `Authorize` (Bearer token).
