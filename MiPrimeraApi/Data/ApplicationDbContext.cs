@@ -11,7 +11,8 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
-    public DbSet<Producto> Productos => Set<Producto>(); // Agregamos la tabla Productos
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,11 +36,18 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
         });
 
-        // <-- 2. Agregamos las reglas de Producto
+        // Configuración de Producto
         modelBuilder.Entity<Producto>(entity =>
         {
             entity.Property(p => p.Nombre).HasMaxLength(100);
             entity.Property(p => p.Precio).HasPrecision(18, 2);
+        });
+
+        // Configuración de Proveedor (ITID803_02)
+        modelBuilder.Entity<Proveedor>(entity =>
+        {
+            entity.Property(p => p.Nombre).HasMaxLength(100);
+            entity.Property(p => p.Telefono).HasMaxLength(20);
         });
     }
 }

@@ -91,3 +91,19 @@ Content-Type: application/json
 DELETE {{MiPrimeraApi_HostAddress}}/api/Productos/{{nuevoProductoId}}
 Authorization: Bearer {{tokenAdmin}}
 Accept: application/json
+
+
+### =========================================================
+### 5. PRUEBA EXAMEN CORTO ITID803_02: PROVEEDORES
+### =========================================================
+
+### 5.1 Crear Proveedor como Admin (201 Created)
+POST {{MiPrimeraApi_HostAddress}}/api/Proveedores
+Authorization: Bearer {{tokenAdmin}}
+Content-Type: application/json
+
+{
+  "nombre": "Distribuidora La Costa",
+  "telefono": "0991234567",
+  "activo": true
+}
