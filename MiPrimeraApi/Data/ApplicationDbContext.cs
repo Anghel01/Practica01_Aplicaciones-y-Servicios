@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using MiPrimeraApi.Models;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace MiPrimeraApi.Data;
 
-public class ApplicationDbContext : DbContext
-{
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>{
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
@@ -16,6 +15,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder); // Siempre primero para las llaves de Identity
         // Configuración de Usuarios
         modelBuilder.Entity<Usuario>(entity =>
         {

@@ -4,7 +4,7 @@ using MiPrimeraApi.Models;
 
 namespace MiPrimeraApi.Repositorio
 {
-    public class ProductoRepository
+    public class ProductoRepository: IProductoRepository
     {
         private readonly ApplicationDbContext _context;
 

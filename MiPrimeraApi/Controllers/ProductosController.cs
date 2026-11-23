@@ -11,9 +11,9 @@ namespace MiPrimeraApi.Controllers
     [ApiController]
     public class ProductosController : ControllerBase
     {
-        private readonly ProductoRepository _repo;
+        private readonly IProductoRepository _repo;
 
-        public ProductosController(ProductoRepository repo)
+        public ProductosController(IProductoRepository repo)
         {
             _repo = repo;
         }
