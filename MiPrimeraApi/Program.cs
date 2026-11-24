@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MiPrimeraApi.Data;
+using MiPrimeraApi.Interfaces;
 using MiPrimeraApi.Repositorio;
+using MiPrimeraApi.Repositories;
+using MiPrimeraApi.Services;
 using Microsoft.AspNetCore.Identity;
 using MiPrimeraApi.Models;
 
@@ -47,6 +50,8 @@ builder.Services
 
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
+builder.Services.AddScoped<IProveedorService, ProveedorService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
